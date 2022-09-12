@@ -3,6 +3,7 @@
  * Released under the terms of the GNU GPL v2.0.
  */
 
+#include <linux/limits.h>
 #include <sys/stat.h>
 #include <ctype.h>
 #include <errno.h>
@@ -66,7 +67,7 @@ const char *conf_get_configname(void)
 {
 	char *name = getenv("KCONFIG_CONFIG");
 
-	return name ? name : ".config";
+	return name ? name : "global_config.h";
 }
 
 const char *conf_get_autoconfig_name(void)
@@ -732,11 +733,12 @@ next_menu:
 int conf_write(const char *name)
 {
 	FILE *out;
+	FILE *con;
 	struct symbol *sym;
 	struct menu *menu;
 	const char *basename;
 	const char *str;
-	char dirname[PATH_MAX+1], tmpname[PATH_MAX+1], newname[PATH_MAX+1];
+	char dirname[PATH_MAX+1], tmpname[PATH_MAX+1], newname[PATH_MAX+1],conname[PATH_MAX+1];
 	char *env;
 
 	dirname[0] = 0;
@@ -762,6 +764,7 @@ int conf_write(const char *name)
 		basename = conf_get_configname();
 
 	sprintf(newname, "%s%s", dirname, basename);
+	sprintf(conname,"%s%s",dirname,"global_config.h");
 	env = getenv("KCONFIG_OVERWRITECONFIG");
 	if (!env || !*env) {
 		sprintf(tmpname, "%s.tmpconfig.%d", dirname, (int)getpid());
@@ -769,11 +772,15 @@ int conf_write(const char *name)
 	} else {
 		*tmpname = 0;
 		out = fopen(newname, "w");
+		con = fopen(conname,"w");
 	}
 	if (!out)
 		return 1;
+	if(!con)
+		return 1;
 
 	conf_write_heading(out, &kconfig_printer_cb, NULL);
+	conf_write_heading(con, &kconfig_printer_cb, NULL);
 
 	if (!conf_get_changed())
 		sym_clear_all_valid();
@@ -796,6 +803,7 @@ int conf_write(const char *name)
 			sym->flags &= ~SYMBOL_WRITE;
 
 			conf_write_symbol(out, sym, &kconfig_printer_cb, NULL);
+			conf_write_symbol(con, sym, &header_printer_cb, NULL);
 		}
 
 next:
@@ -989,7 +997,6 @@ int conf_write_autoconf(const char* filename)
 		sym_calc_value(sym);
 		if (!(sym->flags & SYMBOL_WRITE) || !sym->name)
 			continue;
-
 		/* write symbol to auto.conf, tristate and header files */
 		conf_write_symbol(out, sym, &kconfig_printer_cb, (void *)1);
 

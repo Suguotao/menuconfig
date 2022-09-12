@@ -1,0 +1,23 @@
+mainmenu "Main Menu"
+
+menu "menu"
+
+	config ITEM1
+		bool "select 1"
+		default y
+
+	config ITEM2
+		bool "select 2"
+		default n
+
+	config ITEM3
+		bool "select 3"
+		default n
+
+	config ITEM4
+		bool "select 4"
+		default n
+
+endmenu
+
+
