@@ -8,6 +8,9 @@ Licence
 The code is distributed under the GPLv2.0.
 
 
+
+
+
 building
 ==========
 
@@ -16,10 +19,17 @@ building
     cmake ..
     make
 
+setup enviroment
+==========
+KCONFIG_CONFIG                      Specify configuration file name
+KCONFIG_OVERWRITECONFIG             enable/disable overwrite config file   default:disable
+
 testing
 ==========
 
     cd build
     ./mconf ../test/rootconf
+
+
 
 
